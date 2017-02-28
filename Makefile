@@ -19,16 +19,21 @@ obj = $(src:.yang=.html)
 
 
 
-myprog: $(base_models_dir) $(obj)
+myprog: html $(base_models_dir) $(obj)
 	@echo "All done"
+
+html:
+	mkdir html
 
 $(base_models_dir):
 	git clone https://github.com/open-switch/opx-base-model.git
 
 %.html : %.yang
 	$(PYANG) -f jstree --path=$(rfc_models_dir):$(DIRS) --lax-quote-checks $^ -o $@
+	cp $@ $(TOPDIR)/html/$(notdir $@)
 
 clean:
 	rm -f $(obj) 
 	rm -rf $(base_models_dir)
 	rm -f *~
+	rm -rf html
