@@ -18,8 +18,13 @@ src := $(shell find $(BASEDIR) -name '*.yang')
 obj = $(src:.yang=.html)
 
 
-
 myprog: html $(base_models_dir) $(obj)
+	(cd html; find . -size +19k -print0 | tar -czvf ../html.tgz --null -T -)
+	@rm -rf html
+	mkdir html
+	(cd html; tar xvfz ../html.tgz; rm -f html.tgz)
+	./pushfiles.sh
+
 	@echo "All done"
 
 html:
