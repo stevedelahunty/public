@@ -2,7 +2,8 @@
 # Makefile for creating yang data documentation and for generating RESTAPI's.
 #
 TOPDIR := $(PWD)
-BASEDIR=release/models
+BASEDIR:= opx-base-model/yang-models
+BASE_MODELS_DIR := opx-base-model
 
 DIRLIST := $(sort $(dir $(wildcard $(BASEDIR)/*/)))
 colon:= :
@@ -10,29 +11,29 @@ empty:=
 space:= $(empty) $(empty)
 DIRS := $(subst $(space),$(colon),$(DIRLIST))
 PYANG=pyang
-PYANG_OPTS:= --keep-comments --lax-quote-checks -f jstree --jstree-no-path
-base_models_dir := opx-base-model
-rfc_models_dir := $(base_models_dir)/rfc
+PYANG_OPTS:= --keep-comments --lax-quote-checks -f jstree
+rfc_models_dir:= $(BASE_MODELS_DIR)/rfc:$(BASE_MODELS_DIR)/common/dell
 .PHONY: clean myprog
 
 src := $(shell find $(BASEDIR) -name '*.yang')
 obj = $(src:.yang=.html)
 
 
-myprog: html $(base_models_dir) $(obj)
+myprog: html $(BASE_MODELS_DIR) $(obj)
 	(cd html; find . -size +19k -print0 | tar -czvf ../html.tgz --null -T -)
 	@rm -rf html
 	mkdir html
 	(cd html; tar xvfz ../html.tgz; rm -f html.tgz)
-	./pushfiles.sh
+	./pushfiles_dell.sh
 
 	@echo "All done"
 
 html:
 	mkdir html
 
-$(base_models_dir):
+$(BASE_MODELS_DIR):
 	git clone https://github.com/open-switch/opx-base-model.git
+	DIRLIST=$(sort $(dir $(wildcard $(BASEDIR)/*/)))
 
 %.html : %.yang
 	$(PYANG) --path=$(rfc_models_dir):$(DIRS) $(PYANG_OPTS) $^ -o $@
@@ -42,5 +43,4 @@ clean:
 	rm -f $(obj) 
 	rm -rf $(base_models_dir)
 	rm -f *~
-	rm -rf html*
-	rm -rf opx-flxmodels
+	rm -rf html
